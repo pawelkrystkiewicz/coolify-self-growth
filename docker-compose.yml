@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: growthbook-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-growthbook}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - growthbook-network
+    # Coolify health check
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  growthbook:
+    image: growthbook/growthbook:latest
+    container_name: growthbook-app
+    restart: unless-stopped
+    ports:
+      - '${GROWTHBOOK_PORT:-3000}:3000'
+      - '${GROWTHBOOK_API_PORT:-3100}:3100'
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      # MongoDB Configuration
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME:-growthbook}:${MONGO_ROOT_PASSWORD}@mongo:27017/growthbook?authSource=admin
+
+      # App Configuration
+      - APP_ORIGIN=${APP_ORIGIN:-http://localhost:3000}
+      - API_HOST=${API_HOST:-http://localhost:3100}
+
+      # JWT Secret (generate a strong secret)
+      - JWT_SECRET=${JWT_SECRET}
+
+      # Encryption Key (generate a strong 32-character key)
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+
+      # Email Configuration (optional)
+      - EMAIL_ENABLED=${EMAIL_ENABLED:-false}
+      - EMAIL_HOST=${EMAIL_HOST:-}
+      - EMAIL_PORT=${EMAIL_PORT:-587}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER:-}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+
+      # Cloud Storage (optional - for file uploads)
+      - UPLOAD_METHOD=${UPLOAD_METHOD:-local}
+      - S3_BUCKET=${S3_BUCKET:-}
+      - S3_REGION=${S3_REGION:-}
+      - S3_DOMAIN=${S3_DOMAIN:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+
+      # Google Analytics (optional)
+      - GOOGLE_ANALYTICS_ID=${GOOGLE_ANALYTICS_ID:-}
+
+      # Node Environment
+      - NODE_ENV=${NODE_ENV:-production}
+    volumes:
+      - uploads_data:/usr/local/src/app/packages/back-end/uploads
+    networks:
+      - growthbook-network
+    # Coolify health check
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  mongo_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  growthbook-network:
+    driver: bridge
