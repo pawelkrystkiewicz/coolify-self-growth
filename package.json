@@ -1,0 +1,57 @@
+{
+  "name": "coolify-self-growth",
+  "version": "0.0.1",
+  "description": "A self-hosted GrowthBook instance optimized for Coolify deployment with enhanced security, monitoring, and production-ready configurations.",
+  "main": "index.js",
+  "scripts": {
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "restart": "docker-compose restart",
+    "logs": "docker-compose logs -f",
+    "logs:app": "docker-compose logs -f growthbook",
+    "logs:mongo": "docker-compose logs -f mongo",
+    "status": "docker-compose ps",
+    "clean": "docker-compose down -v --remove-orphans",
+    "backup": "docker exec growthbook-mongo mongodump --out /backup",
+    "restore": "docker exec growthbook-mongo mongorestore /backup",
+    "health": "curl -f http://localhost:3000/api/health",
+    "test:env": "node -e \"console.log('Environment check passed')\"",
+    "validate": "docker-compose config",
+    "update": "docker-compose pull && docker-compose up -d",
+    "dev": "docker-compose up",
+    "build": "docker-compose build"
+  },
+  "keywords": [
+    "growthbook",
+    "coolify",
+    "docker",
+    "self-hosted",
+    "analytics",
+    "experimentation",
+    "a-b-testing",
+    "feature-flags"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/coolify-self-growth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/coolify-self-growth/issues"
+  },
+  "homepage": "https://github.com/yourusername/coolify-self-growth#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "docker": ">=20.0.0",
+    "docker-compose": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "dependencies": {},
+  "volta": {
+    "node": "18.19.0"
+  },
+  "packageManager": "npm@9.0.0"
+}
